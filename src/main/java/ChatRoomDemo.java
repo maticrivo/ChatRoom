@@ -1,14 +1,15 @@
-import java.util.ArrayList;
+
+import java.util.LinkedList;
 import java.util.List;
 
 class Person {
   public String name;
   public ChatRoom room;
-  private List<String> chatLog;
+  public List<String> chatLog;
 
   public Person(String name) {
     this.name = name;
-    chatLog = new ArrayList<>();
+    chatLog = new LinkedList<>();
   }
 
   public void printChatLog() {
@@ -29,7 +30,7 @@ class Person {
 
   public void privateMessage(String destination, String message) {
 
-    room.message(this.name, destination, message);
+    room.message(name, destination, message);
   }
 
   public void removeLastMessage() {
@@ -38,8 +39,9 @@ class Person {
   }
 
   public void removeLastMessageFrom(String sender) {
-    for (int i = chatLog.size() - 1; i >= 0; i--) {
-      if (chatLog.get(i).startsWith(sender + ":")) {
+    for (int i = chatLog.size() - 1; i > 0; i--) {
+      String firstWordInMessage = chatLog.get(i).split(":")[0];
+      if (firstWordInMessage.equals(sender)) {
         chatLog.remove(i);
         return;
       }
@@ -51,7 +53,7 @@ class ChatRoom {
   private List<Person> people;
 
   public ChatRoom() {
-    people = new ArrayList<>();
+    people = new LinkedList<>();
   }
 
   public void broadcast(String source, String message) {
@@ -61,7 +63,7 @@ class ChatRoom {
   }
 
   public void removeLastMessageFromMe(String sender) {
-    for (Person person : people) {
+    for (var person : people) {
       if (!person.name.equals(sender)) {
         person.removeLastMessageFrom(sender);
       }
@@ -78,22 +80,21 @@ class ChatRoom {
 
   public void leave(Person p) {
     String leaveMsg = p.name + " leaves the chat";
-    people.remove(p);
     broadcast("room", leaveMsg);
-
-    p.room = null;
+    people.remove(p);
   }
 
   public void message(String source, String destination, String message) {
     people.stream()
-      .filter((Person p) -> p.name.equals(destination))
+      .filter((p) -> p.name.equals(destination))
       .findFirst()
-      .ifPresent((Person p) -> p.receive(source, message));
+      .ifPresent((p) -> p.receive(source, message));
   }
 }
 
-class ChatRoomDemo {
-  public static void main(String[] args) {
+public class ChatRoomDemo {
+    public static void main(String[] args) {
+
     ChatRoom room = new ChatRoom();
 
     Person john = new Person("John");
@@ -109,7 +110,7 @@ class ChatRoomDemo {
     room.join(simon);
     simon.say("hi everyone!");
 
-    jane.privateMessage("Simon", "glad you could join us!");
+    jane.privateMessage("Simon", "Hi Simon, I think you entered the wrong room!");
 
     simon.removeLastMessage();
     room.leave(simon);
